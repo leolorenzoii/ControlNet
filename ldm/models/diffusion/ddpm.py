@@ -808,8 +808,10 @@ class LatentDiffusion(DDPM):
             if self.use_positional_encodings:
                 pos_x, pos_y = self.compute_latent_shifts(batch)
                 c = {'pos_x': pos_x, 'pos_y': pos_y}
-        c['output_x'] = output_x
-        out = [z, c]
+        out_c = {}
+        out_c['c_crossattn'] = c
+        out_c['output_x'] = output_x
+        out = [z, out_c]
         if return_first_stage_outputs:
             xrec = self.decode_first_stage(z)
             out.extend([x, xrec])
