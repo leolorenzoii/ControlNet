@@ -317,15 +317,15 @@ class ControlLDM(LatentDiffusion):
 
     @torch.no_grad()
     def get_input(self, batch, k, bs=None, *args, **kwargs):
-        x, c = super().get_input(batch, self.first_stage_key, *args, **kwargs)
+        x, c, z_out = super().get_input(batch, self.first_stage_key, *args, **kwargs)
         control = batch[self.control_key]
-        output_x = batch[self.second_stage_key]
+        # output_x = batch[self.second_stage_key]
         if bs is not None:
             control = control[:bs]
         control = control.to(self.device)
         control = einops.rearrange(control, 'b h w c -> b c h w')
         control = control.to(memory_format=torch.contiguous_format).float()
-        return x, dict(c_crossattn=[c], c_concat=[control], c_output=[output_x])
+        return x, dict(c_crossattn=[c], c_concat=[control], c_output=[z_out])
 
     def apply_model(self, x_noisy, t, cond, *args, **kwargs):
         assert isinstance(cond, dict)

@@ -773,7 +773,12 @@ class LatentDiffusion(DDPM):
         encoder_posterior = self.encode_first_stage(x)
         z = self.get_first_stage_encoding(encoder_posterior).detach()
 
-        output_x = batch[self.second_stage_key]
+        output_x = super().get_input(batch, 'jpg')
+        if bs is not None:
+            output_x = output_x[:bs]
+        output_x = output_x.to(self.device)
+        output_encoder_pos = self.encode_first_stage(output_x)
+        z_out = self.get_first_stage_encoding(output_encoder_pos).detach()
 
         if self.model.conditioning_key is not None and not self.force_null_conditioning:
             if cond_key is None:
@@ -808,10 +813,8 @@ class LatentDiffusion(DDPM):
             if self.use_positional_encodings:
                 pos_x, pos_y = self.compute_latent_shifts(batch)
                 c = {'pos_x': pos_x, 'pos_y': pos_y}
-        out_c = {}
-        out_c['c_crossattn'] = c
-        out_c['output_x'] = output_x
-        out = [z, out_c]
+
+        out = [z, c, z_out]
         if return_first_stage_outputs:
             xrec = self.decode_first_stage(z)
             out.extend([x, xrec])
@@ -896,9 +899,9 @@ class LatentDiffusion(DDPM):
         prefix = 'train' if self.training else 'val'
 
         if self.parameterization == "x0":
-            target = cond['output_x']
+            target = cond['c_output'][0]
         elif self.parameterization == "eps":
-            target = cond['output_x']
+            target = cond['c_output'][0]
         elif self.parameterization == "v":
             target = self.get_v(x_start, noise, t)
         else:
