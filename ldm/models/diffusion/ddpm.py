@@ -891,9 +891,9 @@ class LatentDiffusion(DDPM):
         prefix = 'train' if self.training else 'val'
 
         if self.parameterization == "x0":
-            target = x_start
+            target = cond['output_x']
         elif self.parameterization == "eps":
-            target = noise
+            target = cond['output_x']
         elif self.parameterization == "v":
             target = self.get_v(x_start, noise, t)
         else:
