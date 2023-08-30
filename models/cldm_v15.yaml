@@ -8,7 +8,7 @@ model:
     timesteps: 1000
     second_stage_key: "jpg"
     first_stage_key: "input_jpg"
-    cond_stage_key: "txt"
+    cond_stage_key: "input_jpg"
     control_key: "hint"
     image_size: 64
     channels: 4
