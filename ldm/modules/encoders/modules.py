@@ -106,17 +106,17 @@ class FrozenImageEmbedder(AbstractEncoder):
             for param in self.parameters():
                 param.requires_grad = False
 
-        def forward(self, image):
-            batch_encoding = self.preprocessor(
-                images=image, return_tensors="pt"
-            )
-            outputs = self.transformer(images=batch_encoding)
-            z = outputs.last_hidden_state
+    def forward(self, image):
+        batch_encoding = self.preprocessor(
+            images=image, return_tensors="pt"
+        )
+        outputs = self.transformer(images=batch_encoding)
+        z = outputs.last_hidden_state
 
-            return z
+        return z
 
-        def encode(self, image):
-            return self(image)
+    def encode(self, image):
+        return self(image)
 
 
 class FrozenCLIPEmbedder(AbstractEncoder):
