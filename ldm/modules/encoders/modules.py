@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
 from transformers import T5Tokenizer, T5EncoderModel, CLIPTokenizer, CLIPTextModel
+from transformers import CLIPImageProcessor, CLIPVisionModel
 
 import open_clip
 from ldm.util import default, count_params
@@ -83,6 +84,42 @@ class FrozenT5Embedder(AbstractEncoder):
 
     def encode(self, text):
         return self(text)
+
+
+class FrozenImageEmbedder(AbstractEncoder):
+    """Uses the CLIP transformer encoder for image"""
+    LAYERS = [
+        "last",
+        "pooled",
+        "hidden"
+    ]
+    def __init__(self, version="openai/clip-vit-large-patch14", device="cuda", max_length=77,
+                 freeze=True, layer="last", layer_idx=None):
+        super().__init__()
+        assert layer in self.LAYERS
+        self.preprocessor = CLIPImageProcessor.from_pretrained(version)
+        self.transformer = CLIPVisionModel.from_pretrained(version)
+        self.device = device
+        self.max_length = max_length
+        if freeze:
+            self.freeze()
+
+        def freeze(self):
+            self.transformer = self.transformer.eval()
+            for param in self.parameters():
+                param.requires_grad = False
+
+        def forward(self, image):
+            batch_encoding = self.preprocessor.preprocess(
+                images=image, return_tensors="pt"
+            )
+            outputs = self.transformer(images=batch_encoding)
+            z = outputs.last_hidden_state
+
+            return z
+
+        def encode(self, image):
+            return self(image)
 
 
 class FrozenCLIPEmbedder(AbstractEncoder):
