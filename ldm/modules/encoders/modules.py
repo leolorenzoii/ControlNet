@@ -102,9 +102,6 @@ class FrozenImageEmbedder(AbstractEncoder):
         self.device = device
         self.max_length = max_length
         if freeze:
-            self.freeze()
-
-        def freeze(self):
             self.transformer = self.transformer.eval()
             for param in self.parameters():
                 param.requires_grad = False
