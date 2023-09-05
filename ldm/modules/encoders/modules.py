@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
 from transformers import T5Tokenizer, T5EncoderModel, CLIPTokenizer, CLIPTextModel
-from transformers import CLIPProcessor, CLIPVisionModelWithProjection
+from transformers import CLIPProcessor, CLIPModel
 
 import open_clip
 from ldm.util import default, count_params
@@ -98,7 +98,7 @@ class FrozenImageEmbedder(AbstractEncoder):
         super().__init__()
         assert layer in self.LAYERS
         self.preprocessor = CLIPProcessor.from_pretrained(version)
-        self.transformer = CLIPVisionModelWithProjection.from_pretrained(version)
+        self.transformer = CLIPModel.from_pretrained(version)
         self.device = device
         self.max_length = max_length
         if freeze:
@@ -112,8 +112,8 @@ class FrozenImageEmbedder(AbstractEncoder):
             images=image, return_tensors="pt",
         )
         pixel_values = batch_encoding['pixel_values'].to(self.device)
-        outputs = self.transformer(pixel_values=pixel_values)
-        z = outputs.image_embeds[:, None, :]
+        outputs = self.transformer.get_image_features(pixel_values=pixel_values)
+        z = outputs[:, None, :]
         return z
 
     def encode(self, image):
