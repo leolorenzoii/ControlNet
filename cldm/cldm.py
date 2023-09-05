@@ -344,7 +344,9 @@ class ControlLDM(LatentDiffusion):
 
     @torch.no_grad()
     def get_unconditional_conditioning(self, N):
-        return self.get_learned_conditioning([""] * N)
+        empty_image = torch.zeros(N, 512, 512, 3)
+        # return self.get_learned_conditioning([""] * N)
+        return self.get_learned_conditioning(empty_image)
 
     @torch.no_grad()
     def log_images(self, batch, N=4, n_row=2, sample=False, ddim_steps=50, ddim_eta=0.0, return_keys=None,
@@ -361,7 +363,8 @@ class ControlLDM(LatentDiffusion):
         n_row = min(z.shape[0], n_row)
         log["reconstruction"] = self.decode_first_stage(z)
         log["control"] = c_cat * 2.0 - 1.0
-        log["conditioning"] = log_txt_as_img((512, 512), batch[self.cond_stage_key], size=16)
+        log["conditioning"] = log_txt_as_img((512, 512), batch["txt"], size=16)
+        # log["conditioning"] = batch[self.cond_stage_key][0]
 
         if plot_diffusion_rows:
             # get diffusion row
